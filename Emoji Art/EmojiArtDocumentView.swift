@@ -11,7 +11,14 @@ struct EmojiArtDocumentView: View {
     typealias Emoji = EmojiArt.Emoji
     @ObservedObject var document: EmojiArtDocument
 
+    @State private var selectedEmojis = Set<EmojiArt.Emoji.ID>()
+
     private let paletteEmojiSize: CGFloat = 40
+    private let selectedEmojiSize: CGFloat = 60
+    
+    private func isSelected(_ emoji: Emoji) -> Bool {
+        selectedEmojis.contains(emoji.id)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,7 +29,7 @@ struct EmojiArtDocumentView: View {
                 .scrollIndicators(.hidden)
         }
     }
-    
+
     @State private var zoom: CGFloat = 1
     @State private var pan: CGOffset = .zero
     @GestureState private var zoomGestureState: CGFloat = 1
@@ -42,7 +49,7 @@ struct EmojiArtDocumentView: View {
             }
         }
     }
-    
+
     private var zoomGesture: some Gesture {
         MagnificationGesture()
             .updating($zoomGestureState) { inMotionPinchScale, zoomGestureState, _ in
@@ -52,7 +59,7 @@ struct EmojiArtDocumentView: View {
                 zoom *= endingPinchScale
             }
     }
-    
+
     private var panGesture: some Gesture {
         DragGesture()
             .updating($panGestureState) { inMotionDragGestureValue, panGestureState, _ in
@@ -62,7 +69,7 @@ struct EmojiArtDocumentView: View {
                 pan += endingDragGestureValue.translation
             }
     }
-    
+
     @ViewBuilder
     private func documentContents(in geometry: GeometryProxy) -> some View {
         AsyncImage(url: document.background)
@@ -70,7 +77,24 @@ struct EmojiArtDocumentView: View {
         ForEach(document.emojis) { emoji in
             Text(emoji.content)
                 .font(emoji.font)
+                .overlay {
+                    SelectedShape(enabled: isSelected(emoji))                    
+                        .frame(width: selectedEmojiSize, height: selectedEmojiSize)
+                }
                 .position(emoji.position.in(geometry))
+                .onTapGesture {
+                    tapEmoji(emoji)
+                }
+        }
+    }
+    
+    private func tapEmoji(_ emoji: Emoji) {
+        withAnimation {
+            if isSelected(emoji) {
+                selectedEmojis.remove(emoji.id)
+            } else {
+                selectedEmojis.insert(emoji.id)
+            }
         }
     }
 
@@ -93,7 +117,7 @@ struct EmojiArtDocumentView: View {
         }
         return false
     }
-    
+
     private func emojiPosition(at location: CGPoint, in geometry: GeometryProxy) -> Emoji.Position {
         let center = geometry.frame(in: .local).center
         return Emoji.Position(

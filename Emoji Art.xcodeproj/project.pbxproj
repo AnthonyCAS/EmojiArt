@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		51846FE22C56D71B001F13A1 /* SelectedShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51846FE12C56D71B001F13A1 /* SelectedShape.swift */; };
 		51A3F78F2C547F3400F04EFA /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A3F78E2C547F3400F04EFA /* Palette.swift */; };
 		51A3F7912C548C9200F04EFA /* PaletteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A3F7902C548C9200F04EFA /* PaletteStore.swift */; };
 		51A3F7932C54961000F04EFA /* PaletteChooser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A3F7922C54961000F04EFA /* PaletteChooser.swift */; };
@@ -21,6 +22,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		51846FE12C56D71B001F13A1 /* SelectedShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectedShape.swift; sourceTree = "<group>"; };
 		51A3F78E2C547F3400F04EFA /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		51A3F7902C548C9200F04EFA /* PaletteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteStore.swift; sourceTree = "<group>"; };
 		51A3F7922C54961000F04EFA /* PaletteChooser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteChooser.swift; sourceTree = "<group>"; };
@@ -76,6 +78,7 @@
 				51A3F78E2C547F3400F04EFA /* Palette.swift */,
 				51A3F7902C548C9200F04EFA /* PaletteStore.swift */,
 				51A3F7922C54961000F04EFA /* PaletteChooser.swift */,
+				51846FE12C56D71B001F13A1 /* SelectedShape.swift */,
 			);
 			path = "Emoji Art";
 			sourceTree = "<group>";
@@ -160,6 +163,7 @@
 			files = (
 				51D6AB4C2C5065730067EF3F /* Extensions.swift in Sources */,
 				51A3F7912C548C9200F04EFA /* PaletteStore.swift in Sources */,
+				51846FE22C56D71B001F13A1 /* SelectedShape.swift in Sources */,
 				51D6AB462C5029E80067EF3F /* EmojiArt.swift in Sources */,
 				51D6AB4A2C505ADE0067EF3F /* EmojiArtDocumentView.swift in Sources */,
 				51D6AB4E2C5082EB0067EF3F /* StrurlData.swift in Sources */,
