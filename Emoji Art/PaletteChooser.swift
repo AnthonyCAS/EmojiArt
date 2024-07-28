@@ -19,7 +19,17 @@ struct PaletteChooser: View {
     }
 
     private var chooser: some View {
-        AnimatedActionButton(systemImage: "paintpalette") {}
+        AnimatedActionButton(systemImage: "paintpalette") {
+            store.cursorIndex += 1
+        }
+        .contextMenu {
+            AnimatedActionButton("New", systemImage: "plus") {
+                store.insert(name: "Math", emojis: "+−×÷∝∞")
+            }
+            AnimatedActionButton("delete", systemImage: "minus.circle", role: .destructive) {
+                store.remove()
+            }
+        }
     }
 
     private func view(for palette: Palette) -> some View {
@@ -27,6 +37,8 @@ struct PaletteChooser: View {
             Text(palette.name)
             ScrollingEmojis(palette.emojis)
         }
+        .id(palette.id)
+        .transition(.rollUp)
     }
 }
 

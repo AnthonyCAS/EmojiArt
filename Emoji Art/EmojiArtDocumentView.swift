@@ -32,7 +32,7 @@ struct EmojiArtDocumentView: View {
         GeometryReader { geometry in
             ZStack {
                 Color.white
-                zoomGestureContents(in: geometry)
+                documentContents(in: geometry)
                     .scaleEffect(zoom * zoomGestureState)
                     .offset(pan + panGestureState)
             }
@@ -45,26 +45,26 @@ struct EmojiArtDocumentView: View {
     
     private var zoomGesture: some Gesture {
         MagnificationGesture()
-            .updating($zoomGestureState) { value, zoomGestureState, _ in
-                zoomGestureState = value
+            .updating($zoomGestureState) { inMotionPinchScale, zoomGestureState, _ in
+                zoomGestureState = inMotionPinchScale
             }
-            .onEnded { value in
-                zoom *= value
+            .onEnded { endingPinchScale in
+                zoom *= endingPinchScale
             }
     }
     
     private var panGesture: some Gesture {
         DragGesture()
-            .updating($panGestureState) { value, panGestureState, _ in
-                panGestureState = value.translation
+            .updating($panGestureState) { inMotionDragGestureValue, panGestureState, _ in
+                panGestureState = inMotionDragGestureValue.translation
             }
-            .onEnded { value in
-                pan += value.translation
+            .onEnded { endingDragGestureValue in
+                pan += endingDragGestureValue.translation
             }
     }
     
     @ViewBuilder
-    private func zoomGestureContents(in geometry: GeometryProxy) -> some View {
+    private func documentContents(in geometry: GeometryProxy) -> some View {
         AsyncImage(url: document.background)
             .position(Emoji.Position.zero.in(geometry))
         ForEach(document.emojis) { emoji in

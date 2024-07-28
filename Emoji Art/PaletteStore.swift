@@ -11,7 +11,7 @@ class PaletteStore: ObservableObject {
     private let name: String
     
     
-    @Published var palettes: [Palette] {
+    @Published private(set) var palettes: [Palette] {
         didSet {
             if palettes.isEmpty, !oldValue.isEmpty {
                 palettes = oldValue
@@ -72,5 +72,9 @@ class PaletteStore: ObservableObject {
     
     func append(name: String, emojis: String) {
         append(palette: Palette(name: name, emojis: emojis))
+    }
+    
+    func remove() {
+        palettes.remove(at: cursorIndex)
     }
 }
