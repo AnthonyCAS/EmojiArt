@@ -47,6 +47,9 @@ struct EmojiArtDocumentView: View {
             .dropDestination(for: StrurlData.self) { sturldatas, location in
                 drop(sturldatas, at: location, in: geometry)
             }
+            .onTapGesture {
+                selectedEmojis.removeAll()
+            }
         }
     }
 
