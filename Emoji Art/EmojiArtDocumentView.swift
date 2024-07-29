@@ -15,6 +15,12 @@ struct EmojiArtDocumentView: View {
 
     private let paletteEmojiSize: CGFloat = 40
     private let selectedEmojiSize: CGFloat = 60
+
+    @State private var zoom: CGFloat = 1
+    @State private var pan: CGOffset = .zero
+    @GestureState private var zoomGestureState: CGFloat = 1
+    @GestureState private var panGestureState: CGOffset = .zero
+    @GestureState private var emojiPanGestureState: CGOffset = .zero
     
     private func isSelected(_ emoji: Emoji) -> Bool {
         selectedEmojis.contains(emoji.id)
@@ -29,11 +35,6 @@ struct EmojiArtDocumentView: View {
                 .scrollIndicators(.hidden)
         }
     }
-
-    @State private var zoom: CGFloat = 1
-    @State private var pan: CGOffset = .zero
-    @GestureState private var zoomGestureState: CGFloat = 1
-    @GestureState private var panGestureState: CGOffset = .zero
 
     private var documentBody: some View {
         GeometryReader { geometry in
@@ -62,6 +63,16 @@ struct EmojiArtDocumentView: View {
                 zoom *= endingPinchScale
             }
     }
+    
+    private var emojiZoomGesture: some Gesture {
+        MagnificationGesture()
+            .updating($zoomGestureState) { inMotionPinchScale, zoomGestureState, _ in
+                zoomGestureState = inMotionPinchScale
+            }
+            .onEnded { endingPinchScale in
+                zoom *= endingPinchScale
+            }
+    }
 
     private var panGesture: some Gesture {
         DragGesture()
@@ -78,13 +89,28 @@ struct EmojiArtDocumentView: View {
         AsyncImage(url: document.background)
             .position(Emoji.Position.zero.in(geometry))
         ForEach(document.emojis) { emoji in
+            let isEmojiSelected = isSelected(emoji)
             Text(emoji.content)
                 .font(emoji.font)
                 .overlay {
-                    SelectedShape(enabled: isSelected(emoji))                    
+                    SelectedShape(enabled: isEmojiSelected)
                         .frame(width: selectedEmojiSize, height: selectedEmojiSize)
                 }
+                .offset(isEmojiSelected ? emojiPanGestureState : .zero)
                 .position(emoji.position.in(geometry))
+                .gesture(
+                    isEmojiSelected ?
+                    DragGesture()
+                        .updating($emojiPanGestureState) { value, state, _ in
+                            state = value.translation
+                        }
+                        .onEnded { endingDragGestureValue in
+                            selectedEmojis.forEach { emojiId in
+                                document.move(emojiWithId: emojiId, by: endingDragGestureValue.translation)
+                            }
+                        }
+                    : nil
+                )
                 .onTapGesture {
                     tapEmoji(emoji)
                 }

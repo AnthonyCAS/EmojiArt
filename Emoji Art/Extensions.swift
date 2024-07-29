@@ -27,11 +27,11 @@ extension CGRect {
 }
 
 extension CGOffset {
-    static func +(lhs: CGSize, rhs: CGSize) -> CGSize {
+    static func +(lhs: CGOffset, rhs: CGOffset) -> CGOffset {
         CGSize(width: lhs.width + rhs.width, height: lhs.height + rhs.height)
     }
     
-    static func +=(lhs: inout CGSize, rhs: CGSize) {
+    static func +=(lhs: inout CGOffset, rhs: CGOffset) {
         lhs = lhs + rhs
     }
 }
