@@ -20,10 +20,13 @@ struct EmojiArtDocumentView: View {
     @State private var pan: CGOffset = .zero
     @GestureState private var zoomGestureState: CGFloat = 1
     @GestureState private var globalPanGestureState: CGOffset = .zero
-    @GestureState private var emojiPanGestureState: CGOffset = .zero
+    @GestureState private var emojiPanGestureState: (
+        unselectedId: Emoji.ID?,
+        offset: CGOffset
+    ) = (nil, .zero)
 
     private var isGestureInProgress: Bool {
-        zoomGestureState != 1 || emojiPanGestureState != .zero || globalPanGestureState != .zero
+        zoomGestureState != 1 || emojiPanGestureState.offset != .zero || globalPanGestureState != .zero
     }
 
     private func isSelected(_ emoji: Emoji) -> Bool {
@@ -72,12 +75,6 @@ struct EmojiArtDocumentView: View {
             }
     }
 
-    private func resizeSelectedEmojis(by scale: CGFloat) {
-        for id in selectedEmojis {
-            document.resize(emojiWithId: id, by: scale)
-        }
-    }
-
     private var globalPanGesture: some Gesture {
         DragGesture()
             .updating($globalPanGestureState) { inMotionDragGestureValue, panGestureState, _ in
@@ -109,24 +106,46 @@ struct EmojiArtDocumentView: View {
                     }
                 }
                 .scaleEffect(isEmojiSelected ? zoomGestureState : 1)
-                .offset(isEmojiSelected ? emojiPanGestureState : .zero)
+                .offset(
+                    isEmojiSelected && emojiPanGestureState.unselectedId == nil ? emojiPanGestureState.offset :
+                        emojiPanGestureState.unselectedId == emoji.id ? emojiPanGestureState.offset : .zero
+                )
                 .position(emoji.position.in(geometry))
                 .gesture(
-                    isEmojiSelected ?
-                        DragGesture()
+                    DragGesture()
                         .updating($emojiPanGestureState) { inMotionDragValue, emojiPanGestureState, _ in
-                            emojiPanGestureState = inMotionDragValue.translation
+
+                            // MARK: - EXTRA TASK (move single unselected emoji)
+
+                            // I am saving the emoji id to track the offset on dragging
+                            emojiPanGestureState = (
+                                unselectedId: !isEmojiSelected ? emoji.id : nil,
+                                offset: inMotionDragValue.translation
+                            )
                         }
-                        .onEnded { endingDragGestureValue in
-                            for emojiId in selectedEmojis {
-                                document.move(emojiWithId: emojiId, by: endingDragGestureValue.translation)
+                        .onEnded { endingDragValue in
+                            if !isEmojiSelected {
+                                document.move(emojiWithId: emoji.id, by: endingDragValue.translation)
+                            } else {
+                                moveSelectedEmojis(by: endingDragValue.translation)
                             }
                         }
-                        : nil
                 )
                 .onTapGesture {
                     tapEmoji(emoji)
                 }
+        }
+    }
+
+    private func moveSelectedEmojis(by offset: CGOffset) {
+        for emojiId in selectedEmojis {
+            document.move(emojiWithId: emojiId, by: offset)
+        }
+    }
+
+    private func resizeSelectedEmojis(by scale: CGFloat) {
+        for id in selectedEmojis {
+            document.resize(emojiWithId: id, by: scale)
         }
     }
 
