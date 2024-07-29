@@ -63,16 +63,6 @@ struct EmojiArtDocumentView: View {
                 zoom *= endingPinchScale
             }
     }
-    
-    private var emojiZoomGesture: some Gesture {
-        MagnificationGesture()
-            .updating($zoomGestureState) { inMotionPinchScale, zoomGestureState, _ in
-                zoomGestureState = inMotionPinchScale
-            }
-            .onEnded { endingPinchScale in
-                zoom *= endingPinchScale
-            }
-    }
 
     private var panGesture: some Gesture {
         DragGesture()
@@ -95,6 +85,14 @@ struct EmojiArtDocumentView: View {
                 .overlay {
                     SelectedShape(enabled: isEmojiSelected)
                         .frame(width: selectedEmojiSize, height: selectedEmojiSize)
+                }
+                .contextMenu {
+                    AnimatedActionButton("Select", systemImage: "checkmark.circle") {
+                        tapEmoji(emoji)
+                    }
+                    AnimatedActionButton("delete", systemImage: "minus.circle", role: .destructive) {
+                        document.removeEmoji(emoji)
+                    }
                 }
                 .offset(isEmojiSelected ? emojiPanGestureState : .zero)
                 .position(emoji.position.in(geometry))
