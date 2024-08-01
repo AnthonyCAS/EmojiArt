@@ -11,7 +11,13 @@ import SwiftUI
 class EmojiArtDocument: ObservableObject {
     typealias Emoji = EmojiArt.Emoji
     
-    @Published private var emojiArt = EmojiArt()
+    @Published private var emojiArt = EmojiArt() {
+        didSet {
+            autosave()
+        }
+    }
+    
+    private let autoSaveURL: URL = URL.documentsDirectory.appendingPathComponent("autosaved.emojiart")
     
     var background: URL? {
         emojiArt.background
@@ -21,7 +27,42 @@ class EmojiArtDocument: ObservableObject {
         emojiArt.emojis
     }
     
+    init() {
+        if let data = try? Data(contentsOf: autoSaveURL),
+           let autoSavedEmojiArt = try? EmojiArt(json: data)
+        {
+            emojiArt = autoSavedEmojiArt
+        }
+    }
+    
+    private func autosave() {
+        save(to: autoSaveURL)
+        print("autosaved to \(autoSaveURL)")
+    }
+    
+    private func save(to url: URL) {
+        do {
+            let jsonData: Data = try emojiArt.json()
+            try jsonData.write(to: url)
+        } catch {
+            print("EmojiArtDocument: error while saving \(error.localizedDescription)")
+        }
+    }
+    
+    private func resize(_ emoji: Emoji, by scale: CGFloat) {
+        emojiArt[emoji].size = Int(CGFloat(emojiArt[emoji].size) * scale)
+    }
+    
+    private func move(_ emoji: Emoji, by offset: CGOffset) {
+        let existingPosition = emojiArt[emoji].position
+        emojiArt[emoji].position = Emoji.Position(
+            x: existingPosition.x + Int(offset.width),
+            y: existingPosition.y - Int(offset.height)
+        )
+    }
+    
     // MARK: - Intent(s)
+
     func setBackground(_ url: URL?) {
         emojiArt.setBackground(url)
     }
@@ -34,22 +75,10 @@ class EmojiArtDocument: ObservableObject {
         emojiArt.removeEmoji(emoji)
     }
     
-    func move(_ emoji: Emoji, by offset: CGOffset) {
-        let existingPosition = emojiArt[emoji].position
-        emojiArt[emoji].position = Emoji.Position(
-            x: existingPosition.x + Int(offset.width),
-            y: existingPosition.y - Int(offset.height)
-        )
-    }
-    
     func move(emojiWithId id: Emoji.ID, by offset: CGOffset) {
         if let emoji = emojiArt[id] {
             move(emoji, by: offset)
         }
-    }
-    
-    func resize(_ emoji: Emoji, by scale: CGFloat) {
-        emojiArt[emoji].size = Int(CGFloat(emojiArt[emoji].size) * scale)
     }
     
     func resize(emojiWithId id: Emoji.ID, by scale: CGFloat) {
@@ -58,7 +87,6 @@ class EmojiArtDocument: ObservableObject {
         }
     }
 }
-
 
 extension EmojiArt.Emoji {
     var font: Font {

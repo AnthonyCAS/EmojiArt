@@ -7,20 +7,45 @@
 
 import SwiftUI
 
+extension UserDefaults {
+    func palettes(forKey key: String) -> [Palette] {
+        if let jsonData = data(forKey: key),
+           let decodedPalettes = try? JSONDecoder().decode([Palette].self, from: jsonData)
+        {
+            return decodedPalettes
+        }
+        return []
+    }
+    
+    func set(_ palettes: [Palette], forKey key: String) {
+        let data = try? JSONEncoder().encode(palettes)
+        set(data, forKey: key)
+    }
+}
+
 class PaletteStore: ObservableObject, Identifiable {
     let name: String
+    
+    private var userDefaultKey: String {
+        "PaletteStore:\(name)"
+    }
     
     var id: String {
         name
     }
     
-    @Published var palettes: [Palette] {
-        didSet {
-            if palettes.isEmpty, !oldValue.isEmpty {
-                palettes = oldValue
+    var palettes: [Palette] {
+        get {
+            UserDefaults.standard.palettes(forKey: userDefaultKey)
+        }
+        set {
+            if !newValue.isEmpty {
+                UserDefaults.standard.set(newValue, forKey: userDefaultKey)
+                objectWillChange.send()
             }
         }
     }
+    
     @Published private var _cursorIndex: Int = 0
     
     var cursorIndex: Int {
@@ -30,9 +55,11 @@ class PaletteStore: ObservableObject, Identifiable {
     
     init(name: String) {
         self.name = name
-        palettes = Palette.builtins
         if palettes.isEmpty {
-            palettes = [Palette(name: "Warning", emojis: "⚠️")]
+            palettes = Palette.builtins
+            if palettes.isEmpty {
+                palettes = [Palette(name: "Warning", emojis: "⚠️")]
+            }
         }
     }
     
@@ -48,7 +75,7 @@ class PaletteStore: ObservableObject, Identifiable {
         let insertionIndex = boundsCheckedPaletteIndex(insertionIndex ?? cursorIndex)
         if let index = palettes.firstIndex(where: { $0.id == palette.id }) {
             palettes.move(fromOffsets: IndexSet([index]), toOffset: insertionIndex)
-            palettes.replaceSubrange(insertionIndex...insertionIndex, with: [palette])
+            palettes.replaceSubrange(insertionIndex ... insertionIndex, with: [palette])
         } else {
             palettes.insert(palette, at: insertionIndex)
         }
