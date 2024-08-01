@@ -49,20 +49,18 @@ struct EmojiArt: Codable {
     }
     
     subscript(_ emojiId: Emoji.ID) -> Emoji? {
-        if let index = index(of: emojiId) {
-            return emojis[index]
-        } else {
+        guard let index = index(of: emojiId) else {
             return nil
         }
+        return emojis[index]
     }
 
     subscript(_ emoji: Emoji) -> Emoji {
         get {
-            if let index = index(of: emoji.id) {
-                return emojis[index]
-            } else {
-                return emoji // should probably throw error
+            guard let index = index(of: emoji.id) else {
+                return emoji
             }
+            return emojis[index]
         }
         set {
             if let index = index(of: emoji.id) {
