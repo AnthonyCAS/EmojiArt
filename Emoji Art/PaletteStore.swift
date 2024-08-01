@@ -7,11 +7,14 @@
 
 import SwiftUI
 
-class PaletteStore: ObservableObject {
-    private let name: String
+class PaletteStore: ObservableObject, Identifiable {
+    let name: String
     
+    var id: String {
+        name
+    }
     
-    @Published private(set) var palettes: [Palette] {
+    @Published var palettes: [Palette] {
         didSet {
             if palettes.isEmpty, !oldValue.isEmpty {
                 palettes = oldValue
@@ -74,7 +77,17 @@ class PaletteStore: ObservableObject {
         append(palette: Palette(name: name, emojis: emojis))
     }
     
-    func remove() {
+    func removeAtCurrentCursorIndex() {
         palettes.remove(at: cursorIndex)
+    }
+}
+
+extension PaletteStore: Hashable {
+    static func == (lhs: PaletteStore, rhs: PaletteStore) -> Bool {
+        lhs.name == rhs.name
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
     }
 }
