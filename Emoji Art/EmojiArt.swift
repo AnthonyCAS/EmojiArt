@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct EmojiArt {
+struct EmojiArt: Codable {
     private(set) var background: URL?
     
     private(set) var emojis = [Emoji]()
@@ -16,6 +16,18 @@ struct EmojiArt {
     
     mutating func setBackground(_ url: URL?) {
         background = url
+    }
+    
+    init() {}
+    
+    init(json: Data) throws {
+        self = try JSONDecoder().decode(EmojiArt.self, from: json)
+    }
+    
+    func json() throws -> Data {
+        let enconded = try JSONEncoder().encode(self)
+        print("EmojiArt: \(String(data: enconded, encoding: .utf8) ?? "nil")")
+        return enconded
     }
     
     mutating func addEmoji(_ emoji: String, at position: Emoji.Position, size: Int) {
@@ -30,13 +42,44 @@ struct EmojiArt {
         )
     }
     
-    struct Emoji: Identifiable {
+    mutating func removeEmoji(_ emoji: Emoji) {
+        if let index = emojis.firstIndex(where: { $0.id == emoji.id }) {
+            emojis.remove(at: index)
+        }
+    }
+    
+    subscript(_ emojiId: Emoji.ID) -> Emoji? {
+        guard let index = index(of: emojiId) else {
+            return nil
+        }
+        return emojis[index]
+    }
+
+    subscript(_ emoji: Emoji) -> Emoji {
+        get {
+            guard let index = index(of: emoji.id) else {
+                return emoji
+            }
+            return emojis[index]
+        }
+        set {
+            if let index = index(of: emoji.id) {
+                emojis[index] = newValue
+            }
+        }
+    }
+    
+    private func index(of emojiId: Emoji.ID) -> Int? {
+        emojis.firstIndex(where: { $0.id == emojiId })
+    }
+    
+    struct Emoji: Identifiable, Codable {
         let content: String
         var position: Position
         var size: Int
         let id: Int
         
-        struct Position {
+        struct Position: Codable {
             let x: Int
             let y: Int
             

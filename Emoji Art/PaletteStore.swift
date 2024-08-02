@@ -7,17 +7,45 @@
 
 import SwiftUI
 
-class PaletteStore: ObservableObject {
-    private let name: String
+extension UserDefaults {
+    func palettes(forKey key: String) -> [Palette] {
+        if let jsonData = data(forKey: key),
+           let decodedPalettes = try? JSONDecoder().decode([Palette].self, from: jsonData)
+        {
+            return decodedPalettes
+        }
+        return []
+    }
     
+    func set(_ palettes: [Palette], forKey key: String) {
+        let data = try? JSONEncoder().encode(palettes)
+        set(data, forKey: key)
+    }
+}
+
+class PaletteStore: ObservableObject, Identifiable {
+    let name: String
     
-    @Published var palettes: [Palette] {
-        didSet {
-            if palettes.isEmpty, !oldValue.isEmpty {
-                palettes = oldValue
+    private var userDefaultKey: String {
+        "PaletteStore:\(name)"
+    }
+    
+    var id: String {
+        name
+    }
+    
+    var palettes: [Palette] {
+        get {
+            UserDefaults.standard.palettes(forKey: userDefaultKey)
+        }
+        set {
+            if !newValue.isEmpty {
+                UserDefaults.standard.set(newValue, forKey: userDefaultKey)
+                objectWillChange.send()
             }
         }
     }
+    
     @Published private var _cursorIndex: Int = 0
     
     var cursorIndex: Int {
@@ -27,9 +55,11 @@ class PaletteStore: ObservableObject {
     
     init(name: String) {
         self.name = name
-        palettes = Palette.builtins
         if palettes.isEmpty {
-            palettes = [Palette(name: "Warning", emojis: "⚠️")]
+            palettes = Palette.builtins
+            if palettes.isEmpty {
+                palettes = [Palette(name: "Warning", emojis: "⚠️")]
+            }
         }
     }
     
@@ -45,7 +75,7 @@ class PaletteStore: ObservableObject {
         let insertionIndex = boundsCheckedPaletteIndex(insertionIndex ?? cursorIndex)
         if let index = palettes.firstIndex(where: { $0.id == palette.id }) {
             palettes.move(fromOffsets: IndexSet([index]), toOffset: insertionIndex)
-            palettes.replaceSubrange(insertionIndex...insertionIndex, with: [palette])
+            palettes.replaceSubrange(insertionIndex ... insertionIndex, with: [palette])
         } else {
             palettes.insert(palette, at: insertionIndex)
         }
@@ -72,5 +102,19 @@ class PaletteStore: ObservableObject {
     
     func append(name: String, emojis: String) {
         append(palette: Palette(name: name, emojis: emojis))
+    }
+    
+    func removeAtCurrentCursorIndex() {
+        palettes.remove(at: cursorIndex)
+    }
+}
+
+extension PaletteStore: Hashable {
+    static func == (lhs: PaletteStore, rhs: PaletteStore) -> Bool {
+        lhs.name == rhs.name
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
     }
 }
